@@ -1,5 +1,5 @@
 tensorflow
-PIL
+Pillow
 numpy
 flask
-io
+uvicorn

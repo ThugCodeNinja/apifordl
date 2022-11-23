@@ -1,1 +1,1 @@
-from .prediction.serve_model import predict, read_imagefile
+from predict import predict, read_imagefile

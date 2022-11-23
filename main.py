@@ -1,59 +1,29 @@
-import tensorflow as tf
-from PIL import Image
-import numpy as np
-import flask 
-import io
+import uvicorn
+from fastapi import FastAPI, File, UploadFile
+from starlette.responses import RedirectResponse
+from predict import predict, read_imagefile
+
+app_desc = """<h2>Try this app by uploading any image with `predict/image`</h2>
+"""
+
+app = FastAPI(title='FastAPI ', description=app_desc)
 
 
-app = flask.Flask(__name__)
-model = None
+@app.get("/", include_in_schema=False)
+async def index():
+    return RedirectResponse(url="/docs")
 
-def load_model():
-	
-	global model
 
-	model = tf.keras.models.load_model(r"D:\Birds\model_ver1_tuned.h5")
+@app.post("/predict/image")
+async def predict_api(file: UploadFile = File(...)):
+    extension = file.filename.split(".")[-1] in ("jpg", "jpeg", "png")
+    if not extension:
+        return "Image must be jpg or png format!"
+    image = read_imagefile(await file.read())
+    prediction = predict(image)
 
-def prepare_dataset(image, target):
+    return prediction
 
-	if image.mode != "RGB":
-		image= image.convert("RGB")
-
-	image = image.resize(target)
-	image = tf.keras.preprocessing.image.img_to_array(image)
-	image = np.expand_dims(image, axis=0)
-	image = tf.keras.applications.imagenet_utils.preprocess_input(image)
-
-	return image
-
-@app.route("/predict", methods=["POST"])
-
-def predict():
-
-	data = {"success":False}
-
-	if flask.request.method == "POST":
-		if flask.request.files.get("image"):
-
-			image = flask.request.files["image"].read()
-			image = Image.open(io.BytesIO(image))
-
-			image = prepare_dataset(image, target=(224,224))
-
-			preds = model.predict(image)
-			results = tf.keras.applications.imagenet_utils.decode_predictions(preds)
-
-			data["predictions"] = []
-
-			for (_, label, prob) in results[0]:
-				r = {"label": label, "probablity": float(prob)}
-				data["predictions"].append(r)
-
-			data["success"] = True
-
-	return flask.jsonify(data)
 
 if __name__ == "__main__":
-	print("Loading Keras")
-	load_model()
-	app.run()
+    uvicorn.run(app, debug=True)

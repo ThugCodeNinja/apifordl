@@ -1,6 +1,0 @@
-tensorflow
-Pillow
-numpy
-uvicorn
-flask
-

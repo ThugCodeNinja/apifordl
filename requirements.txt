@@ -1,5 +1,8 @@
-Flask
-tensorflow
-numpy
+tensorflow-cpu
+fastapi
 Pillow
-keras
+starlette
+gunicorn
+uvicorn
+numpy
+python-multipart
